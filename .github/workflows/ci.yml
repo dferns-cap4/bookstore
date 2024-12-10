@@ -19,7 +19,7 @@ jobs:
 
       # Step 2: Set up Docker Compose
       - name: Start services with Docker Compose
-        run: docker-compose up --build --abort-on-container-exit
+        run: docker compose up --build --abort-on-container-exit
 
       - name: Run tests in the container
         run: docker compose exec app pytest tests/
@@ -27,4 +27,4 @@ jobs:
       # Step 3: Tear down services
       - name: Stop and clean up Docker Compose
         if: always()
-        run: docker-compose down
+        run: docker compose down
