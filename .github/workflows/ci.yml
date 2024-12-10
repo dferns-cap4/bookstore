@@ -37,6 +37,10 @@ jobs:
       - name: Run tests in the container
         run: docker compose exec app pytest tests/
 
+      - name: Debug Database Logs
+        if: always()
+        run: docker compose logs db
+      
       # Step 6: Tear down services
       - name: Stop and clean up Docker Compose
         if: always()
