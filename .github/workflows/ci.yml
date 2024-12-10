@@ -1,0 +1,30 @@
+name: CI with Docker Compose
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Docker Compose
+      - name: Start services with Docker Compose
+        run: docker-compose up --build --abort-on-container-exit
+
+      - name: Run tests in the container
+        run: docker compose exec app pytest tests/
+
+      # Step 3: Tear down services
+      - name: Stop and clean up Docker Compose
+        if: always()
+        run: docker-compose down
