@@ -17,14 +17,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Set up Docker Compose
+      # Step 2: Start services
       - name: Start services with Docker Compose
-        run: docker compose up --build --abort-on-container-exit
+        run: docker compose up --build -d
 
+      # Step 3: Debug Database Initialization
+      - name: Verify Database Initialization
+        run: docker compose exec db psql -U fastapi_user -c '\l'
+
+      # Step 4: Wait for services to be ready
+      - name: Wait for Database
+        run: |
+          until docker compose exec db pg_isready -U fastapi_user; do
+            echo "Waiting for database..."
+            sleep 5
+          done
+
+      # Step 5: Run tests
       - name: Run tests in the container
         run: docker compose exec app pytest tests/
 
-      # Step 3: Tear down services
+      # Step 6: Tear down services
       - name: Stop and clean up Docker Compose
         if: always()
         run: docker compose down

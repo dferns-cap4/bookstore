@@ -16,6 +16,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount init.sql for database initialization
 
   app:
     build: .
@@ -28,6 +30,7 @@ services:
       - "8000:8000"
     environment:
       DATABASE_URL: "postgresql+asyncpg://fastapi_user:secret_password@db/fastapi_db"
+    command: ["./wait-for-it.sh", "db:5432", "--", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 networks:
   fastapi-net:
