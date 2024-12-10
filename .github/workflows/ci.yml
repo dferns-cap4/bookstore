@@ -21,10 +21,9 @@ jobs:
       - name: Start services with Docker Compose
         run: docker compose up --build -d
 
-      # Step 3: Debug Database Initialization
-      - name: Verify Database Initialization
-        run: docker compose exec db psql -U fastapi_user -c '\l'
-
+      - name: Debug Database Initialization
+        run: docker compose exec db psql -U fastapi_user -d fastapi_db -c '\l'
+      
       # Step 4: Wait for services to be ready
       - name: Wait for Database
         run: |
