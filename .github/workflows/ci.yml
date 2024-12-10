@@ -1,0 +1,48 @@
+name: CI with Docker Compose
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Step 2: Start services
+      - name: Start services with Docker Compose
+        run: docker compose up --build -d
+
+      # Step 3: Debug Database Initialization
+      - name: Verify Database Initialization
+        run: docker compose exec db psql -U fastapi_user -d fastapi_db -c '\l'
+
+      # Step 4: Wait for services to be ready
+      - name: Wait for Database
+        run: |
+          until docker compose exec db pg_isready -U fastapi_user; do
+            echo "Waiting for database..."
+            sleep 5
+          done
+
+      # Step 5: Debug Database Logs
+      - name: Debug Database Logs
+        if: always()
+        run: docker compose logs db
+
+      # Step 6: Run tests
+      - name: Run tests in the container
+        run: docker compose exec app pytest tests/
+
+      # Step 7: Stop and clean up Docker Compose
+      - name: Stop and clean up Docker Compose
+        if: always()
+        run: docker compose down

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: fastapi_user
+      POSTGRES_PASSWORD: secret_password
+      POSTGRES_DB: fastapi_db
+    networks:
+      - fastapi-net
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fastapi_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql  # Mount init.sql for database initialization
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - fastapi-net
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: "postgresql+asyncpg://fastapi_user:secret_password@db/fastapi_db"
+    command: ["./wait-for-it.sh", "db:5432", "--", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+networks:
+  fastapi-net:
+    driver: bridge
